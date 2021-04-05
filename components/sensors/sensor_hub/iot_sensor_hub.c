@@ -137,6 +137,7 @@ static sensor_info_t s_sensor_info[] = {
 #endif
 #ifdef CONFIG_SENSOR_INCLUDED_IMU
     { "MPU6050", "Gyro/Acce sensor", SENSOR_MPU6050_ID, (const uint8_t *)"\x69\x68" },
+    { "JY901", "Gyro/Acce sensor", SENSOR_JY901_ID, (const uint8_t *)"\x50" },
     { "LIS2DH", "Acce sensor", SENSOR_LIS2DH12_ID, (const uint8_t *)"\x19\x18" },
 #endif
 #ifdef CONFIG_SENSOR_INCLUDED_LIGHT
@@ -663,6 +664,7 @@ uint8_t iot_sensor_scan(bus_handle_t bus, sensor_info_t *buf[], uint8_t num)
     uint8_t addrs[SENSORS_NUM_MAX] = {0};
     /* second call to get the addresses*/
     uint8_t num_attached = i2c_bus_scan(bus, addrs, SENSORS_NUM_MAX);
+    
     uint8_t num_valid = 0;
 
     for (size_t i = 0; i < num_attached; i++) {
@@ -676,7 +678,7 @@ uint8_t iot_sensor_scan(bus_handle_t bus, sensor_info_t *buf[], uint8_t num)
             *(buf + num_valid) = matched_info;
         }
 
-        num_valid++;
+        num_valid++;        
     }
 
     return num_valid;

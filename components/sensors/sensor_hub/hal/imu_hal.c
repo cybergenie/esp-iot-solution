@@ -23,6 +23,9 @@
 #ifdef CONFIG_SENSOR_IMU_INCLUDED_MPU6050
 #include "mpu6050.h"
 #endif
+#ifdef CONFIG_SENSOR_IMU_INCLUDED_JY901
+#include "jy901.h"
+#endif
 #ifdef CONFIG_SENSOR_IMU_INCLUDED_LIS2DH12
 #include "lis2dh12.h"
 #endif
@@ -75,6 +78,18 @@ static const imu_impl_t imu_implementations[] = {
         .acquire_gyro = imu_mpu6050_acquire_gyro,
         .sleep = imu_mpu6050_sleep,
         .wakeup = imu_mpu6050_wakeup,
+    },
+#endif
+#ifdef CONFIG_SENSOR_IMU_INCLUDED_JY901
+    {
+        .id = JY901_ID,
+        .init = imu_jy901_init,
+        .deinit = imu_jy901_deinit,
+        .test = imu_jy901_test,
+        .acquire_acce = imu_jy901_acquire_acce,
+        .acquire_gyro = imu_jy901_acquire_gyro,
+        .sleep = imu_jy901_sleep,
+        .wakeup = imu_jy901_wakeup,
     },
 #endif
 #ifdef CONFIG_SENSOR_IMU_INCLUDED_LIS2DH12

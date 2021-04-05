@@ -27,6 +27,7 @@ typedef void *sensor_imu_handle_t; /*!< imu sensor handle*/
  */
 typedef enum {
     MPU6050_ID = 0x01, /*!< MPU6050 imu sensor id*/
+    JY901_ID,
     LIS2DH12_ID, /*!< LIS2DH12 imu sensor id*/
     IMU_MAX_ID, /*!< max imu sensor id*/
 } imu_id_t;

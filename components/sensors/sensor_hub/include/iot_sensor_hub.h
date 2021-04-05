@@ -59,6 +59,7 @@ typedef enum {
 #endif
 #ifdef CONFIG_SENSOR_INCLUDED_IMU
     SENSOR_MPU6050_ID = ((IMU_ID << SENSOR_ID_OFFSET) | MPU6050_ID), /*!< mpu6050 sensor id*/
+    SENSOR_JY901_ID = ((IMU_ID << SENSOR_ID_OFFSET) | JY901_ID), /*!< jy901 sensor id*/
     SENSOR_LIS2DH12_ID = ((IMU_ID << SENSOR_ID_OFFSET) | LIS2DH12_ID), /*!< lis2dh12 sensor id*/
 #endif
 #ifdef CONFIG_SENSOR_INCLUDED_LIGHT
