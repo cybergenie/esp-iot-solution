@@ -282,7 +282,7 @@ static esp_err_t sensor_remove_node(_iot_sensor_t *p_sensor)
 
 static int64_t sensor_get_timestamp_us()
 {
-    int64_t time = esp_timer_get_time();
+    int64_t time = esp_timer_get_time()/1000;
     return time;
 }
 
@@ -312,7 +312,7 @@ static void sensor_default_task(void *arg)
                     /*.event_id and .data assignment during acquire stage*/
                     sensor_data_group.sensor_data[i].timestamp = acquire_time;
                     sensor_data_group.sensor_data[i].sensor_id = node->p_sensor->sensor_id;
-                    sensor_data_group.sensor_data[i].min_delay = node->p_sensor->min_delay;
+                    sensor_data_group.sensor_data[i].min_delay = node->p_sensor->min_delay;                   
                     sensors_event_post(node->p_sensor->event_base, sensor_data_group.sensor_data[i].event_id, &(sensor_data_group.sensor_data[i]), sizeof(sensor_data_t), 0);
                 }
             }

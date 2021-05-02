@@ -115,114 +115,11 @@ esp_err_t jy901_sleep(jy901_handle_t sensor)
     return ret;
 }
 
-esp_err_t jy901_set_acce_fs(jy901_handle_t sensor, jy901_acce_fs_t acce_fs)
+esp_err_t jy901_get_raw_data(jy901_handle_t sensor)
 {
     jy901_dev_t *sens = (jy901_dev_t *) sensor;
-    esp_err_t ret;
-    uint8_t tmp;
-    ret = i2c_bus_read_byte(sens->i2c_dev, JY901_ACCEL_CONFIG, &tmp);
-
-    if (ret != ESP_OK) {
-        return ret;
-    }
-
-    tmp &= (~BIT3);
-    tmp &= (~BIT4);
-    tmp |= (acce_fs << 3);
-    ret = i2c_bus_write_byte(sens->i2c_dev, JY901_ACCEL_CONFIG, tmp);
-    return ret;
-}
-
-esp_err_t jy901_set_gyro_fs(jy901_handle_t sensor, jy901_gyro_fs_t gyro_fs)
-{
-    jy901_dev_t *sens = (jy901_dev_t *) sensor;
-    esp_err_t ret;
-    uint8_t tmp;
-    ret = i2c_bus_read_byte(sens->i2c_dev, JY901_GYRO_CONFIG, &tmp);
-
-    if (ret != ESP_OK) {
-        return ret;
-    }
-
-    tmp &= (~BIT3);
-    tmp &= (~BIT4);
-    tmp |= (gyro_fs << 3);
-    ret = i2c_bus_write_byte(sens->i2c_dev, JY901_GYRO_CONFIG, tmp);
-    return ret;
-}
-
-esp_err_t jy901_get_acce_fs(jy901_handle_t sensor, jy901_acce_fs_t *acce_fs)
-{
-    jy901_dev_t *sens = (jy901_dev_t *) sensor;
-    esp_err_t ret;
-    uint8_t tmp;
-    ret = i2c_bus_read_byte(sens->i2c_dev, JY901_ACCEL_CONFIG, &tmp);
-    tmp = (tmp >> 3) & 0x03;
-    *acce_fs = tmp;
-    return ret;
-}
-
-esp_err_t jy901_get_gyro_fs(jy901_handle_t sensor, jy901_gyro_fs_t *gyro_fs)
-{
-    jy901_dev_t *sens = (jy901_dev_t *) sensor;
-    esp_err_t ret;
-    uint8_t tmp;
-    ret = i2c_bus_read_byte(sens->i2c_dev, JY901_GYRO_CONFIG, &tmp);
-    tmp = (tmp >> 3) & 0x03;
-    *gyro_fs = tmp;
-    return ret;
-}
-
-esp_err_t jy901_get_acce_sensitivity(jy901_handle_t sensor, float *acce_sensitivity)
-{
-    jy901_dev_t *sens = (jy901_dev_t *) sensor;
-    esp_err_t ret;
-    uint8_t acce_fs;
-    ret = i2c_bus_read_byte(sens->i2c_dev, JY901_ACCEL_CONFIG, &acce_fs);
-    acce_fs = (acce_fs >> 3) & 0x03;
-    switch (acce_fs) {
-        case ACCE_FS_2G:
-            *acce_sensitivity = 16384;
-            break;
-        case ACCE_FS_4G:
-            *acce_sensitivity = 8192;
-            break;
-        case ACCE_FS_8G:
-            *acce_sensitivity = 4096;
-            break;
-        case ACCE_FS_16G:
-            *acce_sensitivity = 2048;
-            break;
-        default:
-            break;
-    }
-    return ret;
-}
-
-esp_err_t jy901_get_gyro_sensitivity(jy901_handle_t sensor, float *gyro_sensitivity)
-{
-    jy901_dev_t *sens = (jy901_dev_t *) sensor;
-    esp_err_t ret;
-    uint8_t gyro_fs;
-    ret = i2c_bus_read_byte(sens->i2c_dev, JY901_ACCEL_CONFIG, &gyro_fs);
-    gyro_fs = (gyro_fs >> 3) & 0x03;
-    switch (gyro_fs) {
-        case GYRO_FS_250DPS:
-            *gyro_sensitivity = 131;
-            break;
-        case GYRO_FS_500DPS:
-            *gyro_sensitivity = 65.5;
-            break;
-        case GYRO_FS_1000DPS:
-            *gyro_sensitivity = 32.8;
-            break;
-        case GYRO_FS_2000DPS:
-            *gyro_sensitivity = 16.4;
-            break;
-        default:
-            break;
-    }
-    return ret;
+    uint8_t data_rd[6] = {0};
+    esp_err_t ret = i2c_bus_read_bytes(sens->i2c_dev, JY901_ACCEL_XOUT_H, 6, data_rd);
 }
 
 esp_err_t jy901_get_raw_acce(jy901_handle_t sensor, jy901_raw_acce_value_t *raw_acce_value)
@@ -230,9 +127,9 @@ esp_err_t jy901_get_raw_acce(jy901_handle_t sensor, jy901_raw_acce_value_t *raw_
     jy901_dev_t *sens = (jy901_dev_t *) sensor;
     uint8_t data_rd[6] = {0};
     esp_err_t ret = i2c_bus_read_bytes(sens->i2c_dev, JY901_ACCEL_XOUT_H, 6, data_rd);
-    raw_acce_value->raw_acce_x = (int16_t)((data_rd[0] << 8) + (data_rd[1]));
-    raw_acce_value->raw_acce_y = (int16_t)((data_rd[2] << 8) + (data_rd[3]));
-    raw_acce_value->raw_acce_z = (int16_t)((data_rd[4] << 8) + (data_rd[5]));
+    raw_acce_value->raw_acce_x = (int16_t)((data_rd[1] << 8)|(data_rd[0]));
+    raw_acce_value->raw_acce_y = (int16_t)((data_rd[3] << 8)|(data_rd[2]));
+    raw_acce_value->raw_acce_z = (int16_t)((data_rd[5] << 8)|(data_rd[4]));
     return ret;
 }
 
@@ -241,22 +138,16 @@ esp_err_t jy901_get_raw_gyro(jy901_handle_t sensor, jy901_raw_gyro_value_t *raw_
     jy901_dev_t *sens = (jy901_dev_t *) sensor;
     uint8_t data_rd[6] = {0};
     esp_err_t ret = i2c_bus_read_bytes(sens->i2c_dev, JY901_GYRO_XOUT_H, 6, data_rd);
-    raw_gyro_value->raw_gyro_x = (int16_t)((data_rd[0] << 8) + (data_rd[1]));
-    raw_gyro_value->raw_gyro_y = (int16_t)((data_rd[2] << 8) + (data_rd[3]));
-    raw_gyro_value->raw_gyro_z = (int16_t)((data_rd[4] << 8) + (data_rd[5]));
+    raw_gyro_value->raw_gyro_x = (int16_t)((data_rd[1] << 8)|(data_rd[0]));
+    raw_gyro_value->raw_gyro_y = (int16_t)((data_rd[3] << 8)|(data_rd[2]));
+    raw_gyro_value->raw_gyro_z = (int16_t)((data_rd[5] << 8)|(data_rd[4]));
     return ret;
 }
 
 esp_err_t jy901_get_acce(jy901_handle_t sensor, jy901_acce_value_t *acce_value)
 {
-    esp_err_t ret;
-    float acce_sensitivity;
-    jy901_raw_acce_value_t raw_acce;
-    ret = jy901_get_acce_sensitivity(sensor, &acce_sensitivity);
-
-    if (ret != ESP_OK) {
-        return ret;
-    }
+    esp_err_t ret;    
+    jy901_raw_acce_value_t raw_acce;   
 
     ret = jy901_get_raw_acce(sensor, &raw_acce);
 
@@ -264,22 +155,16 @@ esp_err_t jy901_get_acce(jy901_handle_t sensor, jy901_acce_value_t *acce_value)
         return ret;
     }
 
-    acce_value->acce_x = raw_acce.raw_acce_x / acce_sensitivity;
-    acce_value->acce_y = raw_acce.raw_acce_y / acce_sensitivity;
-    acce_value->acce_z = raw_acce.raw_acce_z / acce_sensitivity;
+    acce_value->acce_x = (raw_acce.raw_acce_x / 32768.0)*16*9.8;
+    acce_value->acce_y = (raw_acce.raw_acce_y / 32768.0)*16*9.8;
+    acce_value->acce_z = (raw_acce.raw_acce_z / 32768.0)*16*9.8;
     return ESP_OK;
 }
 
 esp_err_t jy901_get_gyro(jy901_handle_t sensor, jy901_gyro_value_t *gyro_value)
 {
-    esp_err_t ret;
-    float gyro_sensitivity;
-    jy901_raw_gyro_value_t raw_gyro;
-    ret = jy901_get_gyro_sensitivity(sensor, &gyro_sensitivity);
-
-    if (ret != ESP_OK) {
-        return ret;
-    }
+    esp_err_t ret;    
+    jy901_raw_gyro_value_t raw_gyro; 
 
     ret = jy901_get_raw_gyro(sensor, &raw_gyro);
 
@@ -287,9 +172,9 @@ esp_err_t jy901_get_gyro(jy901_handle_t sensor, jy901_gyro_value_t *gyro_value)
         return ret;
     }
 
-    gyro_value->gyro_x = raw_gyro.raw_gyro_x / gyro_sensitivity;
-    gyro_value->gyro_y = raw_gyro.raw_gyro_y / gyro_sensitivity;
-    gyro_value->gyro_z = raw_gyro.raw_gyro_z / gyro_sensitivity;
+    gyro_value->gyro_x = (raw_gyro.raw_gyro_x / 32768.0)*2000.0;
+    gyro_value->gyro_y = (raw_gyro.raw_gyro_y / 32768.0)*2000.0;
+    gyro_value->gyro_z = (raw_gyro.raw_gyro_z / 32768.0)*2000.0;
     return ESP_OK;
 }
 
@@ -349,8 +234,6 @@ esp_err_t imu_jy901_init(i2c_bus_handle_t i2c_bus)
     jy901_get_deviceid(jy901, &jy901_deviceid);
     ESP_LOGI(TAG, "jy901 device address is: 0x%02x\n", jy901_deviceid);
     esp_err_t ret = jy901_wake_up(jy901);
-    ret = jy901_set_acce_fs(jy901, ACCE_FS_4G);
-    ret = jy901_set_gyro_fs(jy901, GYRO_FS_500DPS);
 
     if (ret == ESP_OK) {
         is_init = true;
@@ -402,6 +285,10 @@ esp_err_t imu_jy901_test(void)
     return ESP_OK;
 }
 
+esp_err_t imu_jy901_get_raw_data(jy901_handle_t sensor)
+{
+
+}
 esp_err_t imu_jy901_acquire_gyro(float *gyro_x, float *gyro_y, float *gyro_z)
 {
     if (!is_init) {

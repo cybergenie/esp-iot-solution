@@ -157,6 +157,7 @@ typedef struct {
     uint8_t                  sensor_id;     /*!< sensor id  */
     int32_t                  event_id;      /*!< reserved for future use */
     uint32_t                 min_delay;     /*!<  minimum delay between two events, unit: ms */
+    uint8_t                  sensor_raw_data[20];
     union {
         axis3_t              acce;          /*!< Accelerometer.       unit: G           */
         axis3_t              gyro;          /*!< Gyroscope.           unit: dps         */
@@ -178,6 +179,8 @@ typedef struct {
         float                data[4];       /*!< for general use */
     };
 } sensor_data_t;
+
+
 
 /**
  * @brief sensor data group type

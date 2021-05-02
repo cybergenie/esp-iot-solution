@@ -55,20 +55,20 @@ extern "C" {
 #define JY901_INT_ENABLE          0x38
 #define JY901_DMP_INT_STATUS      0x39
 #define JY901_INT_STATUS          0x3A
-#define JY901_ACCEL_XOUT_H        0x3B
-#define JY901_ACCEL_XOUT_L        0x3C
-#define JY901_ACCEL_YOUT_H        0x3D
-#define JY901_ACCEL_YOUT_L        0x3E
-#define JY901_ACCEL_ZOUT_H        0x3F
-#define JY901_ACCEL_ZOUT_L        0x40
-#define JY901_TEMP_OUT_H          0x41
-#define JY901_TEMP_OUT_L          0x42
-#define JY901_GYRO_XOUT_H         0x43
-#define JY901_GYRO_XOUT_L         0x44
-#define JY901_GYRO_YOUT_H         0x45
-#define JY901_GYRO_YOUT_L         0x46
-#define JY901_GYRO_ZOUT_H         0x47
-#define JY901_GYRO_ZOUT_L         0x48
+#define JY901_ACCEL_XOUT_H        0x34
+#define JY901_ACCEL_XOUT_L        0x34
+#define JY901_ACCEL_YOUT_H        0x35
+#define JY901_ACCEL_YOUT_L        0x35
+#define JY901_ACCEL_ZOUT_H        0x36
+#define JY901_ACCEL_ZOUT_L        0x36
+#define JY901_TEMP_OUT_H          0x40
+#define JY901_TEMP_OUT_L          0x40
+#define JY901_GYRO_XOUT_H         0x37
+#define JY901_GYRO_XOUT_L         0x37
+#define JY901_GYRO_YOUT_H         0x38
+#define JY901_GYRO_YOUT_L         0x38
+#define JY901_GYRO_ZOUT_H         0x39
+#define JY901_GYRO_ZOUT_L         0x39
 #define JY901_EXT_SENS_DATA_00    0x49
 #define JY901_EXT_SENS_DATA_01    0x4A
 #define JY901_EXT_SENS_DATA_02    0x4B
@@ -208,78 +208,16 @@ esp_err_t jy901_wake_up(jy901_handle_t sensor);
  *     - ESP_FAIL Fail
  */
 esp_err_t jy901_sleep(jy901_handle_t sensor);
-
 /**
- * @brief Set accelerometer full scale range
- *
+ * @brief Read raw sensor data 
+ * 
  * @param sensor object handle of jy901
- * @param acce_fs accelerometer full scale range
- *
- * @return
+ * 
+ *  @return
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  */
-esp_err_t jy901_set_acce_fs(jy901_handle_t sensor, jy901_acce_fs_t acce_fs);
-
-/**
- * @brief Set gyroscope full scale range
- *
- * @param sensor object handle of jy901
- * @param gyro_fs gyroscope full scale range
- *
- * @return
- *     - ESP_OK Success
- *     - ESP_FAIL Fail
- */
-esp_err_t jy901_set_gyro_fs(jy901_handle_t sensor, jy901_gyro_fs_t gyro_fs);
-
-/**
- * @brief Get accelerometer full scale range
- *
- * @param sensor object handle of jy901
- * @param acce_fs accelerometer full scale range
- *
- * @return
- *     - ESP_OK Success
- *     - ESP_FAIL Fail
- */
-esp_err_t jy901_get_acce_fs(jy901_handle_t sensor, jy901_acce_fs_t *acce_fs);
-
-/**
- * @brief Get gyroscope full scale range
- *
- * @param sensor object handle of jy901
- * @param gyro_fs gyroscope full scale range
- *
- * @return
- *     - ESP_OK Success
- *     - ESP_FAIL Fail
- */
-esp_err_t jy901_get_gyro_fs(jy901_handle_t sensor, jy901_gyro_fs_t *gyro_fs);
-
-/**
- * @brief Get accelerometer sensitivity
- *
- * @param sensor object handle of jy901
- * @param acce_sensitivity accelerometer sensitivity
- *
- * @return
- *     - ESP_OK Success
- *     - ESP_FAIL Fail
- */
-esp_err_t jy901_get_acce_sensitivity(jy901_handle_t sensor, float *acce_sensitivity);
-
-/**
- * @brief Get gyroscope sensitivity
- *
- * @param sensor object handle of jy901
- * @param gyro_sensitivity gyroscope sensitivity
- *
- * @return
- *     - ESP_OK Success
- *     - ESP_FAIL Fail
- */
-esp_err_t jy901_get_gyro_sensitivity(jy901_handle_t sensor, float *gyro_sensitivity);
+esp_err_t jy901_get_raw_data(jy901_handle_t sensor);
 
 /**
  * @brief Read raw accelerometer measurements
@@ -373,6 +311,26 @@ esp_err_t imu_jy901_deinit(void);
  *     - ESP_FAIL Fail
  */
 esp_err_t imu_jy901_test(void);
+
+/**
+ * @brief acquire jy901 raw result one time.
+ * 
+ * @param raw result data
+ * 0x34 AX X 轴加速度   2bit
+ * 0x35 AY Y 轴加速度   2bit
+ * 0x36 AZ Z 轴加速度   2bit
+ * 0x37 GX X 轴角速度   2bit
+ * 0x38 GY Y 轴角速度   2bit
+ * 0x39 GZ Z 轴角速度   2bit
+ * 0x3d Roll X 轴角度   2bit
+ * 0x3e Pitch Y 轴角度  2bit
+ * 0x3f Yaw Z 轴角度    2bit
+ * 0x40 TEMP 模块温度   2bit
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_FAIL Fail
+ */
+esp_err_t imu_jy901_get_raw_data(uint8_t *raw_data);
 
 /**
  * @brief acquire jy901 accelerometer result one time.
