@@ -69,6 +69,12 @@ extern "C" {
 #define JY901_GYRO_YOUT_L         0x38
 #define JY901_GYRO_ZOUT_H         0x39
 #define JY901_GYRO_ZOUT_L         0x39
+#define JY901_ROLL_OUT_H          0x3d
+#define JY901_ROLL_OUT_L          0x3d
+#define JY901_PITCH_OUT_H         0x3e
+#define JY901_PITCH_OUT_L         0x3e
+#define JY901_YAW_OUT_H           0x3f
+#define JY901_YAW_OUT_L           0x3f
 #define JY901_EXT_SENS_DATA_00    0x49
 #define JY901_EXT_SENS_DATA_01    0x4A
 #define JY901_EXT_SENS_DATA_02    0x4B
@@ -217,7 +223,7 @@ esp_err_t jy901_sleep(jy901_handle_t sensor);
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  */
-esp_err_t jy901_get_raw_data(jy901_handle_t sensor);
+esp_err_t jy901_get_raw_data(jy901_handle_t sensor,uint8_t *sensor_raw_data);
 
 /**
  * @brief Read raw accelerometer measurements

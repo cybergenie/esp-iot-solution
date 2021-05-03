@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 #include <sys/time.h>
 #include "driver/i2c.h"
 #include "esp_system.h"
@@ -115,11 +116,14 @@ esp_err_t jy901_sleep(jy901_handle_t sensor)
     return ret;
 }
 
-esp_err_t jy901_get_raw_data(jy901_handle_t sensor)
+esp_err_t jy901_get_raw_data(jy901_handle_t sensor, uint8_t *sensor_raw_data)
 {
-    jy901_dev_t *sens = (jy901_dev_t *) sensor;
-    uint8_t data_rd[6] = {0};
-    esp_err_t ret = i2c_bus_read_bytes(sens->i2c_dev, JY901_ACCEL_XOUT_H, 6, data_rd);
+    jy901_dev_t *sens = (jy901_dev_t *) sensor;    
+    uint8_t data_rd[20] = {0};
+    esp_err_t ret_1 = i2c_bus_read_bytes(sens->i2c_dev, JY901_ACCEL_XOUT_H, 12, data_rd);
+    esp_err_t ret_2 = i2c_bus_read_bytes(sens->i2c_dev, JY901_ROLL_OUT_H, 6, data_rd+12);
+    memcpy(sensor_raw_data,data_rd,sizeof(uint8_t)*20);
+    return ret_1 | ret_2;
 }
 
 esp_err_t jy901_get_raw_acce(jy901_handle_t sensor, jy901_raw_acce_value_t *raw_acce_value)
@@ -129,7 +133,7 @@ esp_err_t jy901_get_raw_acce(jy901_handle_t sensor, jy901_raw_acce_value_t *raw_
     esp_err_t ret = i2c_bus_read_bytes(sens->i2c_dev, JY901_ACCEL_XOUT_H, 6, data_rd);
     raw_acce_value->raw_acce_x = (int16_t)((data_rd[1] << 8)|(data_rd[0]));
     raw_acce_value->raw_acce_y = (int16_t)((data_rd[3] << 8)|(data_rd[2]));
-    raw_acce_value->raw_acce_z = (int16_t)((data_rd[5] << 8)|(data_rd[4]));
+    raw_acce_value->raw_acce_z = (int16_t)((data_rd[5] << 8)|(data_rd[4]));    
     return ret;
 }
 
@@ -285,10 +289,29 @@ esp_err_t imu_jy901_test(void)
     return ESP_OK;
 }
 
-esp_err_t imu_jy901_get_raw_data(jy901_handle_t sensor)
+esp_err_t imu_jy901_get_raw_data(uint8_t *imu_raw_data)
 {
+    if (!is_init) {
+        return ESP_FAIL;
+    }
 
+    uint8_t sensor_raw_data[20]={0};
+
+    if(imu_raw_data !=NULL)
+    {
+        if(ESP_OK == jy901_get_raw_data(jy901,sensor_raw_data))
+        {            
+            memcpy(imu_raw_data,sensor_raw_data,sizeof(uint8_t)*20);
+            return ESP_OK;
+        }
+    }
+    memcpy(imu_raw_data,sensor_raw_data,sizeof(uint8_t)*20);
+ 
+
+
+    return ESP_FAIL;
 }
+
 esp_err_t imu_jy901_acquire_gyro(float *gyro_x, float *gyro_y, float *gyro_z)
 {
     if (!is_init) {

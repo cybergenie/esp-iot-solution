@@ -56,6 +56,7 @@ typedef struct {
     esp_err_t (*test)(void);
     esp_err_t (*acquire_acce)(float *acce_x, float *acce_y, float *acce_z);
     esp_err_t (*acquire_gyro)(float *gyro_x, float *gyro_y, float *gyro_z);
+    esp_err_t (*acquire_raw_data)(uint8_t *raw_data);
     esp_err_t (*sleep)(void);
     esp_err_t (*wakeup)(void);
 } imu_impl_t;
@@ -88,6 +89,7 @@ static const imu_impl_t imu_implementations[] = {
         .test = imu_jy901_test,
         .acquire_acce = imu_jy901_acquire_acce,
         .acquire_gyro = imu_jy901_acquire_gyro,
+        .acquire_raw_data = imu_jy901_get_raw_data,
         .sleep = imu_jy901_sleep,
         .wakeup = imu_jy901_wakeup,
     },
@@ -191,6 +193,14 @@ esp_err_t imu_acquire_acce(sensor_imu_handle_t sensor, axis3_t* acce)
     return ret;
 }
 
+esp_err_t imu_acquire_raw(sensor_imu_handle_t sensor, uint8_t* raw_data)
+{
+    SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
+    sensor_imu_t *p_sensor = (sensor_imu_t* )(sensor);
+    esp_err_t ret = p_sensor->impl->acquire_raw_data(raw_data);
+    return ret;
+}
+
 esp_err_t imu_acquire_gyro(sensor_imu_handle_t sensor, axis3_t* gyro)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
@@ -198,6 +208,8 @@ esp_err_t imu_acquire_gyro(sensor_imu_handle_t sensor, axis3_t* gyro)
     esp_err_t ret = p_sensor->impl->acquire_gyro(&gyro->x, &gyro->y, &gyro->z);
     return ret;
 }
+
+
 
 esp_err_t imu_sleep(sensor_imu_handle_t sensor)
 {
@@ -251,6 +263,13 @@ esp_err_t imu_acquire(sensor_imu_handle_t sensor, sensor_data_group_t *data_grou
         data_group->sensor_data[i].event_id = SENSOR_ACCE_DATA_READY;
         i++;
     }
+
+     ret = p_sensor->impl->acquire_raw_data(&data_group->sensor_data[i].sensor_raw_data);
+    if (ESP_OK == ret) {
+        data_group->sensor_data[i].event_id = SENSOR_RAW_DATA_READY;
+        i++;
+    }
+    
     data_group->number = i;
     return ESP_OK;
 }
