@@ -24,7 +24,7 @@
 #include "driver/gpio.h"
 
 static const char *TAG = "SENSOR_HUB";
-const char *SENSOR_TYPE_STRING[] = {"NULL", "HUMITURE", "IMU", "LIGHTSENSOR"};
+const char *SENSOR_TYPE_STRING[] = {"NULL", "HUMITURE", "IMU","GA", "LIGHTSENSOR"};
 const char *SENSOR_MODE_STRING[] = {"MODE_DEFAULT", "MODE_POLLING", "MODE_INTERRUPT"};
 
 #define SENSOR_CHECK(a, str, ret) if(!(a)) { \
@@ -67,6 +67,7 @@ static SemaphoreHandle_t s_sensor_node_mutex = NULL;    /* mutex to achive threa
 
 /*event loop related*/
 ESP_EVENT_DEFINE_BASE(SENSOR_IMU_EVENTS);
+ESP_EVENT_DEFINE_BASE(SENSOR_GA_EVENTS);
 ESP_EVENT_DEFINE_BASE(SENSOR_HUMITURE_EVENTS);
 ESP_EVENT_DEFINE_BASE(SENSOR_LIGHTSENSOR_EVENTS);
 #ifdef CONFIG_SENSOR_DEFAULT_HANDLER
@@ -119,6 +120,15 @@ static iot_sensor_impl_t s_sensor_impls[] = {
         .control = imu_control,
     },
 #endif
+#ifdef CONFIG_SENSOR_INCLUDED_GA
+    {
+        .type = GA_ID,
+        .create = ga_create,
+        .delete = ga_delete,
+        .acquire = ga_acquire,
+        .control = ga_control,
+    },
+#endif
 #ifdef CONFIG_SENSOR_INCLUDED_LIGHT
     {
         .type = LIGHT_SENSOR_ID,
@@ -139,6 +149,9 @@ static sensor_info_t s_sensor_info[] = {
     { "MPU6050", "Gyro/Acce sensor", SENSOR_MPU6050_ID, (const uint8_t *)"\x69\x68" },
     { "JY901", "Gyro/Acce sensor", SENSOR_JY901_ID, (const uint8_t *)"\x50" },
     { "LIS2DH", "Acce sensor", SENSOR_LIS2DH12_ID, (const uint8_t *)"\x19\x18" },
+#endif
+#ifdef CONFIG_SENSOR_INCLUDED_GA    
+    { "JY901", "Gyro/Acce sensor", SENSOR_JY901_ID, (const uint8_t *)"\x50" },    
 #endif
 #ifdef CONFIG_SENSOR_INCLUDED_LIGHT
     { "BH1750", "Light Intensity sensor", SENSOR_BH1750_ID, (const uint8_t *)"\x23" },
@@ -190,7 +203,9 @@ static const char *sensor_find_event_base(int sensor_type)
         case IMU_ID:
             event_base = SENSOR_IMU_EVENTS;
             break;
-
+        case GA_ID:
+            event_base = SENSOR_GA_EVENTS;
+            break;
         case HUMITURE_ID:
             event_base = SENSOR_HUMITURE_EVENTS;
             break;
@@ -720,6 +735,9 @@ esp_err_t iot_sensor_handler_register_with_type(sensor_type_t sensor_type, int32
         case IMU_ID:
             ESP_ERROR_CHECK(sensors_event_handler_instance_register(SENSOR_IMU_EVENTS, event_id, handler, NULL, context));
             break;
+        case GA_ID:
+            ESP_ERROR_CHECK(sensors_event_handler_instance_register(SENSOR_GA_EVENTS, event_id, handler, NULL, context));
+            break;
 
         case LIGHT_SENSOR_ID:
             ESP_ERROR_CHECK(sensors_event_handler_instance_register(SENSOR_LIGHTSENSOR_EVENTS, event_id, handler, NULL, context));
@@ -749,6 +767,9 @@ esp_err_t iot_sensor_handler_unregister_with_type(sensor_type_t sensor_type, int
 
         case IMU_ID:
             ESP_ERROR_CHECK(sensors_event_handler_instance_unregister(SENSOR_IMU_EVENTS, event_id, context));
+            break;
+        case GA_ID:
+            ESP_ERROR_CHECK(sensors_event_handler_instance_unregister(SENSOR_GA_EVENTS, event_id, context));
             break;
 
         case LIGHT_SENSOR_ID:

@@ -17,6 +17,7 @@ list(APPEND EXTRA_COMPONENT_DIRS
                                 "$ENV{IOT_SOLUTION_PATH}/components/sensors/gesture"
                                 "$ENV{IOT_SOLUTION_PATH}/components/sensors/humiture"
                                 "$ENV{IOT_SOLUTION_PATH}/components/sensors/imu"
+                                "$ENV{IOT_SOLUTION_PATH}/components/sensors/ga"
                                 "$ENV{IOT_SOLUTION_PATH}/components/sensors/light_sensor"
                                 "$ENV{IOT_SOLUTION_PATH}/components/sensors/pressure"
                                 "$ENV{IOT_SOLUTION_PATH}/components/storage"

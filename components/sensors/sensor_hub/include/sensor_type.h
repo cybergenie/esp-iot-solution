@@ -64,6 +64,7 @@ typedef enum {
     NULL_ID, /*!< NULL */
     HUMITURE_ID, /*!< humidity or temperature sensor */
     IMU_ID, /*!< gyro or acc sensor */
+    GA_ID, /*!< general sensor */
     LIGHT_SENSOR_ID, /*!< light illumination or uv or color sensor */
     SENSOR_TYPE_MAX, /*!< max sensor type */
 } sensor_type_t;

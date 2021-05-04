@@ -2,6 +2,8 @@
 set(requires bus)
 #imu sensor requires
 list(APPEND requires mpu6050 jy901 lis2dh12)
+#general sensor requires
+list(APPEND requires jy901)
 #humiture sensor requires
 list(APPEND requires sht3x hts221)
 #light sensor requires

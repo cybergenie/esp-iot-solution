@@ -18,14 +18,12 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "esp_timer.h"
-#include "hal/imu_hal.h"
+#include "hal/ga_hal.h"
 
-#ifdef CONFIG_SENSOR_IMU_INCLUDED_MPU6050
-#include "mpu6050.h"
+#ifdef CONFIG_SENSOR_GA_INCLUDED_JY901
+#include "jy901.h"
 #endif
-#ifdef CONFIG_SENSOR_IMU_INCLUDED_LIS2DH12
-#include "lis2dh12.h"
-#endif
+
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
@@ -39,7 +37,7 @@ static esp_err_t null_acquire_function(float *x, float *y, float *z)
 }
 #pragma GCC diagnostic pop
 
-static const char *TAG = "IMU";
+static const char *TAG = "GA";
 
 #define SENSOR_CHECK(a, str, ret) if(!(a)) { \
         ESP_LOGE(TAG,"%s:%d (%s):%s", __FILE__, __LINE__, __FUNCTION__, str); \
@@ -47,62 +45,46 @@ static const char *TAG = "IMU";
     }
 
 typedef struct {
-    imu_id_t id;
+    ga_id_t id;
     esp_err_t (*init)(bus_handle_t);
     esp_err_t (*deinit)(void);
     esp_err_t (*test)(void);
-    esp_err_t (*acquire_acce)(float *acce_x, float *acce_y, float *acce_z);
-    esp_err_t (*acquire_gyro)(float *gyro_x, float *gyro_y, float *gyro_z);
     esp_err_t (*acquire_raw_data)(uint8_t *raw_data);
     esp_err_t (*sleep)(void);
     esp_err_t (*wakeup)(void);
-} imu_impl_t;
+} ga_impl_t;
 
 typedef struct {
-    imu_id_t id;
+    ga_id_t id;
     bus_handle_t bus;
     bool is_init;
-    const imu_impl_t *impl;
-} sensor_imu_t;
+    const ga_impl_t *impl;
+} sensor_ga_t;
 
-static const imu_impl_t imu_implementations[] = {
-#ifdef CONFIG_SENSOR_IMU_INCLUDED_MPU6050
+static const ga_impl_t ga_implementations[] = {
+#ifdef CONFIG_SENSOR_GA_INCLUDED_JY901
     {
-        .id = MPU6050_ID,
-        .init = imu_mpu6050_init,
-        .deinit = imu_mpu6050_deinit,
-        .test = imu_mpu6050_test,
-        .acquire_acce = imu_mpu6050_acquire_acce,
-        .acquire_gyro = imu_mpu6050_acquire_gyro,
-        .sleep = imu_mpu6050_sleep,
-        .wakeup = imu_mpu6050_wakeup,
-    },
-#endif
-
-#ifdef CONFIG_SENSOR_IMU_INCLUDED_LIS2DH12
-    {
-        .id = LIS2DH12_ID,
-        .init = imu_lis2dh12_init,
-        .deinit = imu_lis2dh12_deinit,
-        .test = imu_lis2dh12_test,
-        .acquire_acce = imu_lis2dh12_acquire_acce,
-        .acquire_gyro = null_acquire_function,
-        .sleep = null_function,
-        .wakeup = null_function,
+        .id = JY901_ID,
+        .init = ga_jy901_init,
+        .deinit = ga_jy901_deinit,
+        .test = ga_jy901_test,        
+        .acquire_raw_data = ga_jy901_get_raw_data,
+        .sleep = ga_jy901_sleep,
+        .wakeup = ga_jy901_wakeup,
     },
 #endif
 };
 
 /****************************private functions*************************************/
 
-static const imu_impl_t *find_implementation(imu_id_t id)
+static const ga_impl_t *find_implementation(ga_id_t id)
 {
-    const imu_impl_t *active_driver = NULL;
-    int count = sizeof(imu_implementations) / sizeof(imu_impl_t);
+    const ga_impl_t *active_driver = NULL;
+    int count = sizeof(ga_implementations) / sizeof(ga_impl_t);
 
     for (int i = 0; i < count; i++) {
-        if (imu_implementations[i].id == id) {
-            active_driver = &imu_implementations[i];
+        if (ga_implementations[i].id == id) {
+            active_driver = &ga_implementations[i];
             break;
         }
     }
@@ -112,37 +94,37 @@ static const imu_impl_t *find_implementation(imu_id_t id)
 
 /****************************public functions*************************************/
 
-sensor_imu_handle_t imu_create(bus_handle_t bus, int imu_id)
+sensor_ga_handle_t ga_create(bus_handle_t bus, int ga_id)
 {
     SENSOR_CHECK(bus != NULL, "i2c bus has not initialized", NULL);
-    const imu_impl_t *sensor_impl = find_implementation(imu_id);
+    const ga_impl_t *sensor_impl = find_implementation(ga_id);
 
     if (sensor_impl == NULL) {
-        ESP_LOGE(TAG, "no driver founded, IMU ID = %d", imu_id);
+        ESP_LOGE(TAG, "no driver founded, GA ID = %d", ga_id);
         return NULL;
     }
 
-    sensor_imu_t *p_sensor = (sensor_imu_t *)malloc(sizeof(sensor_imu_t));
-    SENSOR_CHECK(p_sensor != NULL, "imu sensor creat failed", NULL);
-    p_sensor->id = imu_id;
+    sensor_ga_t *p_sensor = (sensor_ga_t *)malloc(sizeof(sensor_ga_t));
+    SENSOR_CHECK(p_sensor != NULL, "ga sensor creat failed", NULL);
+    p_sensor->id = ga_id;
     p_sensor->bus = bus;
     p_sensor->impl = sensor_impl;
     esp_err_t ret = p_sensor->impl->init(bus);
 
     if (ret != ESP_OK) {
         free(p_sensor);
-        ESP_LOGE(TAG, "imu sensor init failed");
+        ESP_LOGE(TAG, "ga sensor init failed");
         return NULL;
     }
 
     p_sensor->is_init = true;
-    return (sensor_imu_handle_t)p_sensor;
+    return (sensor_ga_handle_t)p_sensor;
 }
 
-esp_err_t imu_delete(sensor_imu_handle_t *sensor)
+esp_err_t ga_delete(sensor_ga_handle_t *sensor)
 {
     SENSOR_CHECK(sensor != NULL && *sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
-    sensor_imu_t *p_sensor = (sensor_imu_t *)(*sensor);
+    sensor_ga_t *p_sensor = (sensor_ga_t *)(*sensor);
 
     if (!p_sensor->is_init) {
         free(p_sensor);
@@ -151,16 +133,16 @@ esp_err_t imu_delete(sensor_imu_handle_t *sensor)
 
     p_sensor->is_init = false;
     esp_err_t ret = p_sensor->impl->deinit();
-    SENSOR_CHECK(ret == ESP_OK, "imu sensor de-init failed", ESP_FAIL);
+    SENSOR_CHECK(ret == ESP_OK, "ga sensor de-init failed", ESP_FAIL);
     free(p_sensor);
     *sensor = NULL;
     return ESP_OK;
 }
 
-esp_err_t imu_test(sensor_imu_handle_t sensor)
+esp_err_t ga_test(sensor_ga_handle_t sensor)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
-    sensor_imu_t *p_sensor = (sensor_imu_t *)(sensor);
+    sensor_ga_t *p_sensor = (sensor_ga_t *)(sensor);
 
     if (!p_sensor->is_init) {
         return ESP_FAIL;
@@ -170,52 +152,35 @@ esp_err_t imu_test(sensor_imu_handle_t sensor)
     return ret;
 }
 
-esp_err_t imu_acquire_acce(sensor_imu_handle_t sensor, axis3_t* acce)
+esp_err_t ga_acquire_raw(sensor_ga_handle_t sensor, uint8_t* raw_data)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
-    sensor_imu_t *p_sensor = (sensor_imu_t* )(sensor);
-    esp_err_t ret = p_sensor->impl->acquire_acce(&acce->x, &acce->y, &acce->z);
-    return ret;
-}
-
-esp_err_t imu_acquire_raw(sensor_imu_handle_t sensor, uint8_t* raw_data)
-{
-    SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
-    sensor_imu_t *p_sensor = (sensor_imu_t* )(sensor);
+    sensor_ga_t *p_sensor = (sensor_ga_t* )(sensor);
     esp_err_t ret = p_sensor->impl->acquire_raw_data(raw_data);
     return ret;
 }
 
-esp_err_t imu_acquire_gyro(sensor_imu_handle_t sensor, axis3_t* gyro)
+
+esp_err_t ga_sleep(sensor_ga_handle_t sensor)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
-    sensor_imu_t *p_sensor = (sensor_imu_t* )(sensor);
-    esp_err_t ret = p_sensor->impl->acquire_gyro(&gyro->x, &gyro->y, &gyro->z);
-    return ret;
-}
-
-
-
-esp_err_t imu_sleep(sensor_imu_handle_t sensor)
-{
-    SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
-    sensor_imu_t *p_sensor = (sensor_imu_t *)(sensor);
+    sensor_ga_t *p_sensor = (sensor_ga_t *)(sensor);
     esp_err_t ret = p_sensor->impl->sleep();
     return ret;
 }
 
-esp_err_t imu_wakeup(sensor_imu_handle_t sensor)
+esp_err_t ga_wakeup(sensor_ga_handle_t sensor)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
-    sensor_imu_t *p_sensor = (sensor_imu_t *)(sensor);
+    sensor_ga_t *p_sensor = (sensor_ga_t *)(sensor);
     esp_err_t ret = p_sensor->impl->wakeup();
     return ret;
 }
 
-static esp_err_t imu_set_power(sensor_imu_handle_t sensor, sensor_power_mode_t power_mode)
+static esp_err_t ga_set_power(sensor_ga_handle_t sensor, sensor_power_mode_t power_mode)
 {
     SENSOR_CHECK(sensor != NULL, "pointer can't be NULL ", ESP_ERR_INVALID_ARG);
-    sensor_imu_t *p_sensor = (sensor_imu_t *)(sensor);
+    sensor_ga_t *p_sensor = (sensor_ga_t *)(sensor);
     esp_err_t ret;
     switch (power_mode)
     {
@@ -232,22 +197,12 @@ static esp_err_t imu_set_power(sensor_imu_handle_t sensor, sensor_power_mode_t p
     return ret;
 }
 
-esp_err_t imu_acquire(sensor_imu_handle_t sensor, sensor_data_group_t *data_group)
+esp_err_t ga_acquire(sensor_ga_handle_t sensor, sensor_data_group_t *data_group)
 {
     SENSOR_CHECK(sensor != NULL && data_group != NULL, "pointer can't be NULL ", ESP_ERR_INVALID_ARG);
-    sensor_imu_t *p_sensor = (sensor_imu_t *)(sensor);
+    sensor_ga_t *p_sensor = (sensor_ga_t *)(sensor);
     esp_err_t ret;
     int i = 0;
-    ret = p_sensor->impl->acquire_gyro(&data_group->sensor_data[i].gyro.x, &data_group->sensor_data[i].gyro.y, &data_group->sensor_data[i].gyro.z);
-    if (ESP_OK == ret) {
-        data_group->sensor_data[i].event_id = SENSOR_GYRO_DATA_READY;
-        i++;
-    }
-    ret = p_sensor->impl->acquire_acce(&data_group->sensor_data[i].acce.x, &data_group->sensor_data[i].acce.y, &data_group->sensor_data[i].acce.z);
-    if (ESP_OK == ret) {
-        data_group->sensor_data[i].event_id = SENSOR_ACCE_DATA_READY;
-        i++;
-    }
 
      ret = p_sensor->impl->acquire_raw_data(&data_group->sensor_data[i].sensor_raw_data);
     if (ESP_OK == ret) {
@@ -259,7 +214,7 @@ esp_err_t imu_acquire(sensor_imu_handle_t sensor, sensor_data_group_t *data_grou
     return ESP_OK;
 }
 
-esp_err_t imu_control(sensor_imu_handle_t sensor, sensor_command_t cmd, void *args)
+esp_err_t ga_control(sensor_ga_handle_t sensor, sensor_command_t cmd, void *args)
 {
     SENSOR_CHECK(sensor != NULL, "sensor handle can't be NULL ", ESP_ERR_INVALID_ARG);
     esp_err_t ret;
@@ -275,10 +230,10 @@ esp_err_t imu_control(sensor_imu_handle_t sensor, sensor_command_t cmd, void *ar
         ret = ESP_ERR_NOT_SUPPORTED;
         break;
     case COMMAND_SET_POWER:
-        ret = imu_set_power(sensor, (sensor_power_mode_t)args);
+        ret = ga_set_power(sensor, (sensor_power_mode_t)args);
         break;
     case COMMAND_SELF_TEST:
-        ret = imu_test(sensor);
+        ret = ga_test(sensor);
         break;
     default:
         ret = ESP_ERR_NOT_SUPPORTED;

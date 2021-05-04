@@ -13,6 +13,7 @@ EXTRA_COMPONENT_DIRS += $(IOT_SOLUTION_PATH)/components/sensors
 EXTRA_COMPONENT_DIRS += $(IOT_SOLUTION_PATH)/components/sensors/gesture
 EXTRA_COMPONENT_DIRS += $(IOT_SOLUTION_PATH)/components/sensors/humiture
 EXTRA_COMPONENT_DIRS += $(IOT_SOLUTION_PATH)/components/sensors/imu
+EXTRA_COMPONENT_DIRS += $(IOT_SOLUTION_PATH)/components/sensors/ga
 EXTRA_COMPONENT_DIRS += $(IOT_SOLUTION_PATH)/components/sensors/light_sensor
 EXTRA_COMPONENT_DIRS += $(IOT_SOLUTION_PATH)/components/sensors/pressure
 EXTRA_COMPONENT_DIRS += $(IOT_SOLUTION_PATH)/components/storage

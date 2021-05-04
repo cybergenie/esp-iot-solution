@@ -21,6 +21,10 @@
 #include "hal/imu_hal.h"
 #endif
 
+#ifdef CONFIG_SENSOR_INCLUDED_GA
+#include "hal/ga_hal.h"
+#endif
+
 #ifdef CONFIG_SENSOR_INCLUDED_LIGHT
 #include "hal/light_sensor_hal.h"
 #endif
@@ -58,9 +62,11 @@ typedef enum {
     SENSOR_HTS221_ID = (HUMITURE_ID << SENSOR_ID_OFFSET) | HTS221_ID, /*!< hts221 sensor id*/
 #endif
 #ifdef CONFIG_SENSOR_INCLUDED_IMU
-    SENSOR_MPU6050_ID = ((IMU_ID << SENSOR_ID_OFFSET) | MPU6050_ID), /*!< mpu6050 sensor id*/
-    SENSOR_JY901_ID = ((IMU_ID << SENSOR_ID_OFFSET) | JY901_ID), /*!< jy901 sensor id*/
+    SENSOR_MPU6050_ID = ((IMU_ID << SENSOR_ID_OFFSET) | MPU6050_ID), /*!< mpu6050 sensor id*/    
     SENSOR_LIS2DH12_ID = ((IMU_ID << SENSOR_ID_OFFSET) | LIS2DH12_ID), /*!< lis2dh12 sensor id*/
+#endif
+#ifdef CONFIG_SENSOR_INCLUDED_GA    
+    SENSOR_JY901_ID = ((GA_ID << SENSOR_ID_OFFSET) | JY901_ID), /*!< jy901 sensor id*/    
 #endif
 #ifdef CONFIG_SENSOR_INCLUDED_LIGHT
     SENSOR_BH1750_ID = (LIGHT_SENSOR_ID << SENSOR_ID_OFFSET) | BH1750_ID, /*!< bh1750 sensor id*/

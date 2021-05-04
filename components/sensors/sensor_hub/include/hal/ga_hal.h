@@ -12,24 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _IMU_HAL_H_
-#define _IMU_HAL_H_
+#ifndef _GA_HAL_H_
+#define _GA_HAL_H_
 
 #include "i2c_bus.h"
 #include "esp_err.h"
 #include "sensor_type.h"
 
-typedef void *sensor_imu_handle_t; /*!< imu sensor handle*/
+typedef void *sensor_ga_handle_t; /*!< ga sensor handle*/
 
 /**
- * @brief imu sensor id, used for imu_create
+ * @brief ga sensor id, used for ga_create
  * 
  */
 typedef enum {
-    MPU6050_ID = 0x01, /*!< MPU6050 imu sensor id*/
-    LIS2DH12_ID, /*!< LIS2DH12 imu sensor id*/
-    IMU_MAX_ID, /*!< max imu sensor id*/
-} imu_id_t;
+    JY901_ID = 0x01, /*!< MPU6050 ga sensor id*/    
+    GA_MAX_ID, /*!< max ga sensor id*/
+} ga_id_t;
 
 #ifdef __cplusplus
 extern "C"
@@ -40,99 +39,78 @@ extern "C"
  * Same series' sensor or sensor with same address can only be created once.
  *
  * @param bus i2c bus handle the sensor attached to
- * @param imu_id id declared in imu_id_t
- * @return sensor_imu_handle_t return imu sensor handle if succeed, NULL is failed.
+ * @param ga_id id declared in ga_id_t
+ * @return sensor_ga_handle_t return ga sensor handle if succeed, NULL is failed.
  */
-sensor_imu_handle_t imu_create(bus_handle_t bus, int imu_id);
+sensor_ga_handle_t ga_create(bus_handle_t bus, int ga_id);
 
 /**
  * @brief Delete and release the sensor resource.
  *
- * @param sensor point to imu sensor handle, will set to NULL if delete succeed.
+ * @param sensor point to ga sensor handle, will set to NULL if delete succeed.
  * @return esp_err_t
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
 */
-esp_err_t imu_delete(sensor_imu_handle_t *sensor);
+esp_err_t ga_delete(sensor_ga_handle_t *sensor);
 
 /**
  * @brief Test if sensor is active.
  *
- * @param sensor imu sensor handle to operate
+ * @param sensor ga sensor handle to operate
  * @return esp_err_t
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
 */
-esp_err_t imu_test(sensor_imu_handle_t sensor);
-
-/**
- * @brief Acquire imu sensor accelerometer result one time. 
- * 
- * @param sensor imu sensor handle to operate 
- * @param acce result data (unit:g)
- * @return esp_err_t 
- *     - ESP_OK Success
- *     - ESP_FAIL Fail 
- *     - ESP_ERR_NOT_SUPPORTED Function not supported on this sensor
-*/
-esp_err_t imu_acquire_acce(sensor_imu_handle_t sensor, axis3_t* acce);
-
-/**
- * @brief Acquire imu sensor gyroscope result one time.
- * 
- * @param sensor imu sensor handle to operate 
- * @param gyro result data (unit:dps)
- * @return esp_err_t 
- *     - ESP_OK Success
- *     - ESP_FAIL Fail 
- *     - ESP_ERR_NOT_SUPPORTED Function not supported on this sensor
-*/
-esp_err_t imu_acquire_gyro(sensor_imu_handle_t sensor, axis3_t* gyro);
+esp_err_t ga_test(sensor_ga_handle_t sensor);
 
 /**
  * @brief Set sensor to sleep mode.
  *
- * @param sensor imu sensor handle to operate
+ * @param sensor ga sensor handle to operate
  * @return esp_err_t
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  *     - ESP_ERR_NOT_SUPPORTED Function not supported on this sensor
 */
-esp_err_t imu_sleep(sensor_imu_handle_t sensor);
+esp_err_t ga_sleep(sensor_ga_handle_t sensor);
 
 /**
  * @brief Wakeup sensor from sleep mode.
  *
- * @param sensor imu sensor handle to operate
+ * @param sensor ga sensor handle to operate
  * @return esp_err_t
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  *     - ESP_ERR_NOT_SUPPORTED Function not supported on this sensor
 */
-esp_err_t imu_wakeup(sensor_imu_handle_t sensor);
+esp_err_t ga_wakeup(sensor_ga_handle_t sensor);
+
+
+esp_err_t ga_acquire_raw(sensor_ga_handle_t sensor, uint8_t* raw_data);
 
 /**
  * @brief acquire a group of sensor data
  * 
- * @param sensor imu sensor handle to operate
+ * @param sensor ga sensor handle to operate
  * @param data_group acquired data
  * @return esp_err_t
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  */
-esp_err_t imu_acquire(sensor_imu_handle_t sensor, sensor_data_group_t *data_group);
+esp_err_t ga_acquire(sensor_ga_handle_t sensor, sensor_data_group_t *data_group);
 
 /**
  * @brief control sensor mode with control commands and args
  * 
- * @param sensor imu sensor handle to operate
+ * @param sensor ga sensor handle to operate
  * @param cmd control commands detailed in sensor_command_t
  * @param args control commands args
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  *     - ESP_ERR_NOT_SUPPORTED Function not supported on this sensor
  */
-esp_err_t imu_control(sensor_imu_handle_t sensor, sensor_command_t cmd, void *args);
+esp_err_t ga_control(sensor_ga_handle_t sensor, sensor_command_t cmd, void *args);
 
 #ifdef __cplusplus
 extern "C"
