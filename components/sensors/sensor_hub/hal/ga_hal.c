@@ -24,6 +24,10 @@
 #include "jy901.h"
 #endif
 
+#ifdef CONFIG_SENSOR_GA_INCLUDED_AD7998
+#include "ad7998.h"
+#endif
+
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
@@ -71,6 +75,17 @@ static const ga_impl_t ga_implementations[] = {
         .acquire_raw_data = ga_jy901_get_raw_data,
         .sleep = ga_jy901_sleep,
         .wakeup = ga_jy901_wakeup,
+    },
+#endif
+#ifdef CONFIG_SENSOR_GA_INCLUDED_AD7998
+    {
+        .id = AD7998_ID,
+        .init = ga_ad7998_init,
+        .deinit = ga_ad7998_deinit,
+        .test = ga_ad7998_test,        
+        .acquire_raw_data = ga_ad7998_get_raw_data,
+        .sleep = ga_ad7998_sleep,
+        .wakeup = ga_ad7998_wakeup,
     },
 #endif
 };

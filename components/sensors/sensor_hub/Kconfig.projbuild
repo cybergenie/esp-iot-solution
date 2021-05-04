@@ -4,15 +4,16 @@ menu "Sensor Hub Options"
         menu "GA Hal Options"            
             config SENSOR_GA_INCLUDED_JY901
                 bool "include JY901 driver"
-                default y            
+                default y 
+            config SENSOR_GA_INCLUDED_AD7998
+                bool "include AD7998 driver"
+                default y
         endmenu
         menu "IMU Hal Options"
             config SENSOR_IMU_INCLUDED_MPU6050
                 bool "include MPU6050 driver"
                 default y
-            config SENSOR_IMU_INCLUDED_JY901
-                bool "include JY901 driver"
-                default y
+
             config SENSOR_IMU_INCLUDED_LIS2DH12
                 bool "include LIS2DH12 driver"
                 default y

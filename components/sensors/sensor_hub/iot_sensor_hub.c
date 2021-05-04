@@ -146,12 +146,12 @@ static sensor_info_t s_sensor_info[] = {
     { "HTS221", "Humi/Temp sensor", SENSOR_HTS221_ID, (const uint8_t *)"\x5f" },
 #endif
 #ifdef CONFIG_SENSOR_INCLUDED_IMU
-    { "MPU6050", "Gyro/Acce sensor", SENSOR_MPU6050_ID, (const uint8_t *)"\x69\x68" },
-    { "JY901", "Gyro/Acce sensor", SENSOR_JY901_ID, (const uint8_t *)"\x50" },
+    { "MPU6050", "Gyro/Acce sensor", SENSOR_MPU6050_ID, (const uint8_t *)"\x69\x68" },    
     { "LIS2DH", "Acce sensor", SENSOR_LIS2DH12_ID, (const uint8_t *)"\x19\x18" },
 #endif
 #ifdef CONFIG_SENSOR_INCLUDED_GA    
-    { "JY901", "Gyro/Acce sensor", SENSOR_JY901_ID, (const uint8_t *)"\x50" },    
+    { "JY901", "Gyro/Acce sensor", SENSOR_JY901_ID, (const uint8_t *)"\x50" },
+    { "AD7998", "Pressure sensor", SENSOR_AD7998_ID, (const uint8_t *)"\x21" },    
 #endif
 #ifdef CONFIG_SENSOR_INCLUDED_LIGHT
     { "BH1750", "Light Intensity sensor", SENSOR_BH1750_ID, (const uint8_t *)"\x23" },
@@ -839,7 +839,17 @@ static void sensor_default_event_handler(void *handler_args, esp_event_base_t ba
                      sensor_data->timestamp,
                      sensor_data->gyro.x, sensor_data->gyro.y, sensor_data->gyro.z);
             break;
-
+        case SENSOR_RAW_DATA_READY:
+        {
+            ESP_LOGI(TAG, "Timestamp = %llu - SENSOR_RAW_DATA_READY - "                     
+                     sensor_data->timestamp );                                                  
+            for(int i=0;i<20;i++)
+            {
+                printf("%02x ",sensor_data->sensor_raw_data[i]);
+            }
+            printf("\n");
+            break;
+        }
         case SENSOR_LIGHT_DATA_READY:
             ESP_LOGI(TAG, "Timestamp = %llu - SENSOR_LIGHT_DATA_READY - "
                      "light=%.2f",

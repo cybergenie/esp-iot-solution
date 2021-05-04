@@ -26,7 +26,8 @@ typedef void *sensor_ga_handle_t; /*!< ga sensor handle*/
  * 
  */
 typedef enum {
-    JY901_ID = 0x01, /*!< MPU6050 ga sensor id*/    
+    JY901_ID = 0x01, /*!< MPU6050 imu sensor id*/
+    AD7998_ID, /*!< AD7998 pressure sensor id*/
     GA_MAX_ID, /*!< max ga sensor id*/
 } ga_id_t;
 
